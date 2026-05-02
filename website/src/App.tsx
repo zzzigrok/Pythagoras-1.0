@@ -535,21 +535,20 @@ export default function App() {
                   </span>
                   <div className="text-xs text-slate-500 font-mono">python</div>
                 </div>
-                <div className="p-6 bg-[#0B1120]/80 font-mono text-sm md:text-base text-slate-300 overflow-x-auto whitespace-pre leading-loose">
-<span className="text-purple-400">from</span> pythagoras_hub <span className="text-purple-400">import</span> SimpleLLM, generate_text
-<span className="text-purple-400">import</span> torch
-<span className="text-purple-400">import</span> pickle
-
-<span className="text-slate-500 italic"># Загрузка словаря</span>
-<span className="text-purple-400">with</span> <span className="text-blue-300">open</span>(<span className="text-teal-300">'weights/math_vocab.pkl'</span>, <span className="text-teal-300">'rb'</span>) <span className="text-purple-400">as</span> f:
-    vocab = pickle.load(f)
-    
-<span className="text-slate-500 italic"># Инициализация модели</span>
-model = SimpleLLM(vocab_size=<span className="text-blue-300">len</span>(vocab))
-model.load_state_dict(torch.load(<span className="text-teal-300">'weights/math_model_weights.pth'</span>))
-
-<span className="text-slate-500 italic"># Генерация решения</span>
+                <div className="p-6 bg-[#0B1120]/80 font-mono text-sm md:text-base text-slate-300 overflow-x-auto leading-relaxed">
+                  <pre className="whitespace-pre">
+<span className="text-purple-400">from</span> pythagoras_hub <span className="text-purple-400">import</span> SimpleLLM, generate_text{"\n"}
+<span className="text-purple-400">import</span> torch{"\n"}
+<span className="text-purple-400">import</span> pickle{"\n\n"}
+<span className="text-slate-500 italic"># Загрузка словаря</span>{"\n"}
+<span className="text-purple-400">with</span> <span className="text-blue-300">open</span>(<span className="text-teal-300">'weights/math_vocab.pkl'</span>, <span className="text-teal-300">'rb'</span>) <span className="text-purple-400">as</span> f:{"\n"}
+    vocab = pickle.load(f){"\n\n"}
+<span className="text-slate-500 italic"># Инициализация модели</span>{"\n"}
+model = SimpleLLM(vocab_size=<span className="text-blue-300">len</span>(vocab)){"\n"}
+model.load_state_dict(torch.load(<span className="text-teal-300">'weights/math_model_weights.pth'</span>)){"\n\n"}
+<span className="text-slate-500 italic"># Генерация решения</span>{"\n"}
 <span className="text-blue-300">print</span>(generate_text(model, <span className="text-teal-300">"12 + 5 = "</span>, vocab))
+                  </pre>
                 </div>
               </div>
             </RevealOnScroll>
