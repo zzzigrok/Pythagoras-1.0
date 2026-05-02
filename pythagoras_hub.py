@@ -48,6 +48,10 @@ dropout = 0.1
 
 # --- 2. АРХИТЕКТУРА МОДЕЛИ ---
 class MultiHeadAttention(nn.Module):
+    """
+    Механизм многоголового внимания (Multi-Head Attention).
+    Реализует эффективное вычисление зависимостей между символами в последовательности.
+    """
     def __init__(self, num_heads, head_size):
         super().__init__()
         self.num_heads, self.head_size = num_heads, head_size
@@ -65,6 +69,10 @@ class MultiHeadAttention(nn.Module):
         return self.c_proj(y.transpose(1, 2).contiguous().view(B, T, C))
 
 class Block(nn.Module):
+    """
+    Один блок Трансформера.
+    Состоит из слоя внимания (Attention) и полносвязной сети (FeedForward) с нормализацией.
+    """
     def __init__(self):
         super().__init__()
         self.sa = MultiHeadAttention(n_head, n_embd // n_head)
@@ -76,6 +84,10 @@ class Block(nn.Module):
         return x
 
 class SimpleLLM(nn.Module):
+    """
+    Основная архитектура Pythagoras (Transformer-Decoder).
+    Компактная языковая модель для обработки числовых последовательностей.
+    """
     def __init__(self, vocab_size):
         super().__init__()
         self.vocab_size = vocab_size
@@ -237,6 +249,7 @@ def generate_validation_report(results: list, patterns: dict, accuracy: float, c
 # --- 4. ФУНКЦИИ ИНТЕРФЕЙСА ---
 
 def print_banner():
+    """Выводит анимированный ASCII-арт баннер в цветах триколора."""
     banner = r"""
  [bold white]
  ██████╗ ██╗   ██╗████████╗██╗  ██╗ █████╗  ██████╗  ██████╗ ██████╗  █████╗ ███████╗
@@ -261,6 +274,10 @@ def print_banner():
     ))
 
 def mode_chat():
+    """
+    Режим интерактивного чата.
+    Позволяет пользователю вводить математические примеры и получать ответы от нейросети.
+    """
     console.clear()
     console.print(Panel("[bold blue]🗨️ РЕЖИМ ИНТЕРФЕЙСА С ПИФАГОРОМ[/]", border_style="blue", box=ROUNDED))
     
@@ -317,6 +334,10 @@ def mode_chat():
             f.write(f"[{ts}] Запрос: {prompt} | Ответ: {result}\n")
 
 def mode_train():
+    """
+    Режим обучения модели.
+    Проводит цикл тренировки на датасете, визуализирует процесс и сохраняет веса.
+    """
     console.clear()
     console.print(Panel("[bold magenta]🧬 РЕЖИМ КЛИНИЧЕСКОГО ОБУЧЕНИЯ[/]", border_style="magenta", box=ROUNDED))
     
@@ -401,6 +422,10 @@ def mode_train():
     console.print(Panel("[bold green]🎉 ОБУЧЕНИЕ ЗАВЕРШЕНО УСПЕШНО![/]", border_style="green"))
 
 def mode_history():
+    """
+    Отображает архив последних вычислений.
+    Читает данные из logs/math_chat_history.txt и выводит их в виде таблицы.
+    """
     console.clear()
     console.print(Panel("[bold yellow]📜 АРХИВ ВЫЧИСЛЕНИЙ[/]", border_style="yellow", box=ROUNDED))
     
@@ -428,6 +453,10 @@ def mode_history():
     Prompt.ask("\n[bold white]Нажмите Enter, чтобы вернуться в меню[/]")
 
 def mode_debug():
+    """
+    Центр диагностики.
+    Включает мониторинг ресурсов, инспекцию весов и автоматизированную валидацию точности.
+    """
     console.clear()
     console.print(Panel("[bold red]🛠️ ЦЕНТР ОТЛАДКИ И ДИАГНОСТИКИ[/]", border_style="red", box=ROUNDED))
     
@@ -587,6 +616,10 @@ def mode_debug():
             Prompt.ask("\nНажмите Enter...")
             
 def mode_dataset():
+    """
+    Генератор обучающих данных.
+    Синтезирует сбалансированный набор математических примеров для эффективного обучения.
+    """
     console.clear()
     console.print(Panel("[bold cyan]⚖️ ГЕНЕРАЦИЯ МАТЕМАТИЧЕСКОГО ДАТАСЕТА[/]", border_style="cyan", box=ROUNDED))
     
@@ -631,6 +664,7 @@ def mode_dataset():
 # --- 4. ГЛАВНОЕ МЕНЮ ---
 
 def main():
+    """Главная точка входа. Управляет основным циклом приложения и навигацией по меню."""
     while True:
         console.clear()
         print_banner()
