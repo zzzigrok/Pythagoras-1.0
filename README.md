@@ -6,6 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Pythagoras 1.0** — это специализированная ветка экосистемы **Tolstoy AI Studio (TAS Beta)**, сфокусированная на высокоточных арифметических вычислениях и логическом выводе.
+<br>
+
+![Interface Preview](docs/assets/interface_preview.png)
 
 ---
 
