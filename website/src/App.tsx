@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // --- Пользовательские стили для специфичных анимаций ---
 const CustomStyles = () => (
@@ -141,10 +141,10 @@ const AnimatedTriangle = () => {
            <animate attributeName="r" values="2;3.5;2" dur="2s" repeatCount="indefinite" />
         </circle>
         <circle cx="85" cy="65" r="2.5" className="text-white fill-current animate-pulse shadow-lg" filter="url(#glow)">
-            <animate attributeName="r" values="2;3.5;2" dur="2.5s" repeatCount="indefinite" delay="0.5s" />
+            <animate attributeName="r" values="2;3.5;2" dur="2.5s" repeatCount="indefinite" begin="0.5s" />
         </circle>
         <circle cx="55" cy="65" r="2.5" className="text-white fill-current animate-pulse shadow-lg" filter="url(#glow)">
-            <animate attributeName="r" values="2;3.5;2" dur="3s" repeatCount="indefinite" delay="1s" />
+            <animate attributeName="r" values="2;3.5;2" dur="3s" repeatCount="indefinite" begin="1s" />
         </circle>
 
         {/* Формулы в центрах квадратов */}
