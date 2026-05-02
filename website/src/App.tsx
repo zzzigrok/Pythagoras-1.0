@@ -316,14 +316,21 @@ export default function App() {
                     { color: 'blue', text: 'Никаких скрытых библиотек вроде HuggingFace' },
                     { color: 'purple', text: 'Фокус на архитектуре Transformer' },
                     { color: 'teal', text: 'Обучена на простых математических операциях' }
-                  ].map((item, i) => (
-                    <RevealOnScroll key={i} delay={300 + (i * 150)} direction="left">
-                      <li className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors">
-                        <span className={`w-3 h-3 rounded-full bg-${item.color}-400 shadow-[0_0_12px_rgba(var(--tw-colors-${item.color}-400),0.8)] block animate-pulse`}></span>
-                        <span className="font-medium text-slate-200">{item.text}</span>
-                      </li>
-                    </RevealOnScroll>
-                  ))}
+                  ].map((item, i) => {
+                    const colorClasses: Record<string, string> = {
+                      blue: 'bg-blue-400 shadow-[0_0_12px_rgba(96,165,250,0.8)]',
+                      purple: 'bg-purple-400 shadow-[0_0_12px_rgba(192,132,252,0.8)]',
+                      teal: 'bg-teal-400 shadow-[0_0_12px_rgba(45,212,191,0.8)]'
+                    };
+                    return (
+                      <RevealOnScroll key={i} delay={300 + (i * 150)} direction="left">
+                        <li className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors">
+                          <span className={`w-3 h-3 rounded-full block animate-pulse ${colorClasses[item.color]}`}></span>
+                          <span className="font-medium text-slate-200">{item.text}</span>
+                        </li>
+                      </RevealOnScroll>
+                    );
+                  })}
                 </ul>
               </div>
               
@@ -425,19 +432,26 @@ export default function App() {
               { id: 'brain', title: 'Чистый PyTorch', color: 'blue', desc: 'Модель реализована с использованием базовых тензорных операций. Идеально для изучения механики Self-Attention и Transformer блоков.' },
               { id: 'code', title: 'Легковесность', color: 'purple', desc: 'Архитектура спроектирована так, чтобы обучение и инференс можно было запускать даже на обычном CPU без мощных графических ускорителей.' },
               { id: 'lightning', title: 'Обучающий набор', color: 'teal', desc: 'Включает генератор кастомных датасетов для математических задач (сложение, вычитание, умножение), позволяя экспериментировать с данными.' }
-            ].map((feature, idx) => (
-              <RevealOnScroll key={feature.id} delay={idx * 150} direction="up">
-                <div className="bg-white/5 backdrop-blur-lg p-8 rounded-3xl border border-white/10 hover:bg-white/10 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.3)] hover:-translate-y-3 h-full">
-                  <div className={`w-16 h-16 bg-${feature.color}-500/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-${feature.color}-400 mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-${feature.color}-500/30 shadow-[0_0_20px_rgba(var(--tw-colors-${feature.color}-500),0.3)]`}>
-                    <FeatureIcon type={feature.id} />
+            ].map((feature, idx) => {
+              const featureClasses: Record<string, string> = {
+                blue: 'bg-blue-500/20 text-blue-400 border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.3)]',
+                purple: 'bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.3)]',
+                teal: 'bg-teal-500/20 text-teal-400 border-teal-500/30 shadow-[0_0_20px_rgba(45,212,191,0.3)]'
+              };
+              return (
+                <RevealOnScroll key={feature.id} delay={idx * 150} direction="up">
+                  <div className="bg-white/5 backdrop-blur-lg p-8 rounded-3xl border border-white/10 hover:bg-white/10 transition-all duration-500 group shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.3)] hover:-translate-y-3 h-full">
+                    <div className={`w-16 h-16 backdrop-blur-md rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border ${featureClasses[feature.color]}`}>
+                      <FeatureIcon type={feature.id} />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-4 text-white drop-shadow-sm">{feature.title}</h3>
+                    <p className="text-slate-300 leading-relaxed text-base opacity-80 group-hover:opacity-100 transition-opacity">
+                      {feature.desc}
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold mb-4 text-white drop-shadow-sm">{feature.title}</h3>
-                  <p className="text-slate-300 leading-relaxed text-base opacity-80 group-hover:opacity-100 transition-opacity">
-                    {feature.desc}
-                  </p>
-                </div>
-              </RevealOnScroll>
-            ))}
+                </RevealOnScroll>
+              );
+            })}
           </div>
         </Section>
       </div>
