@@ -323,8 +323,7 @@ def mode_train():
     if not os.path.exists('data/input_math.txt'):
         console.print("[bold yellow]⚠️ Датасет не обнаружен![/]")
         if Prompt.ask("Сгенерировать новые данные?", choices=["y", "n"]) == "y":
-            import prep_math
-            prep_math.generate_balanced_math()
+            mode_dataset()
         else: return
 
     max_iters = IntPrompt.ask("[bold white]Количество циклов обучения[/]", default=5000)
@@ -579,8 +578,47 @@ def mode_debug():
 
             Prompt.ask("\nНажмите Enter...")
             
-        elif choice == "4":
-            break
+def mode_dataset():
+    console.clear()
+    console.print(Panel("[bold cyan]⚖️ ГЕНЕРАЦИЯ МАТЕМАТИЧЕСКОГО ДАТАСЕТА[/]", border_style="cyan", box=ROUNDED))
+    
+    with console.status("[bold cyan]Синтезируем идеально сбалансированные примеры...", spinner="earth"):
+        examples = []
+        # Конфигурация: сколько примеров каждой сложности нам нужно
+        configs = [
+            (1, 9, 100000),      # 100к примеров типа 1+1, 5-3 (односложные)
+            (10, 99, 150000),    # 150к примеров типа 15+20, 80-40 (двузначные)
+            (100, 999, 250000),  # 250к примеров типа 120+450 (трехзначные)
+            (1, 999, 50000),     # 50к смешанных: 1+999, 10+500
+        ]
+
+        for min_v, max_v, count in configs:
+            for _ in range(count):
+                a = random.randint(min_v, max_v)
+                b = random.randint(min_v, max_v)
+                op = random.choice(['+', '-'])
+                if op == '+': res = a + b
+                else:
+                    if a < b: a, b = b, a
+                    res = a - b
+                examples.append(f"{a}{op}{b}={res}\n")
+
+        # Критическая масса особых случаев (50к)
+        for _ in range(50000):
+            a = random.randint(0, 999)
+            case = random.choice([(a, 0, '+'), (a, 0, '-'), (a, a, '-'), (0, a, '+')])
+            a_val, b_val, op = case
+            res = a_val + b_val if op == '+' else a_val - b_val
+            examples.append(f"{a_val}{op}{b_val}={res}\n")
+
+        random.shuffle(examples)
+        os.makedirs('data', exist_ok=True)
+        with open('data/input_math.txt', 'w', encoding='utf-8') as f:
+            for ex in examples:
+                f.write(ex)
+
+    console.print(Panel(f"[bold green]✅ Создано {len(examples)} сбалансированных примеров!\n[white]Файл: [cyan]data/input_math.txt[/]", border_style="green"))
+    Prompt.ask("\nНажмите Enter, чтобы вернуться в меню")
 
 # --- 4. ГЛАВНОЕ МЕНЮ ---
 
@@ -592,19 +630,21 @@ def main():
         options = [
             Panel("[bold cyan]1. ВХОД В ЧАТ[/]\n[dim]Диалог с ИИ[/]", border_style="cyan", box=ROUNDED),
             Panel("[bold magenta]2. ОБУЧЕНИЕ[/]\n[dim]Тренировка[/]", border_style="magenta", box=ROUNDED),
-            Panel("[bold yellow]3. ИСТОРИЯ[/]\n[dim]Архив логов[/]", border_style="yellow", box=ROUNDED),
-            Panel("[bold red]4. ОТЛАДКА[/]\n[dim]Диагностика[/]", border_style="red", box=ROUNDED),
-            Panel("[bold white]5. ВЫХОД[/]\n[dim]Закрыть[/]", border_style="white", box=ROUNDED)
+            Panel("[bold blue]3. ДАТАСЕТ[/]\n[dim]Генерация[/]", border_style="blue", box=ROUNDED),
+            Panel("[bold yellow]4. ИСТОРИЯ[/]\n[dim]Архив логов[/]", border_style="yellow", box=ROUNDED),
+            Panel("[bold red]5. ОТЛАДКА[/]\n[dim]Диагностика[/]", border_style="red", box=ROUNDED),
+            Panel("[bold white]6. ВЫХОД[/]\n[dim]Закрыть[/]", border_style="white", box=ROUNDED)
         ]
         
         console.print(Columns(options, equal=True, expand=True))
         
-        choice = Prompt.ask("\n[bold white]Выберите сектор[/]", choices=["1", "2", "3", "4", "5"])
+        choice = Prompt.ask("\n[bold white]Выберите сектор[/]", choices=["1", "2", "3", "4", "5", "6"])
         
         if choice == "1": mode_chat()
         elif choice == "2": mode_train()
-        elif choice == "3": mode_history()
-        elif choice == "4": mode_debug()
+        elif choice == "3": mode_dataset()
+        elif choice == "4": mode_history()
+        elif choice == "5": mode_debug()
         else:
             console.print("[italic red]Система отключена.[/]")
             break
