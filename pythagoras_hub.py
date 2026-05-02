@@ -588,8 +588,12 @@ def mode_debug():
                 for la, op, lb in combos:
                     for _ in range(tests_per_combo):
                         if la == 'edge':
-                            if lb == '9+1': a, b, op = random.choice([(9,1), (99,1), (999,1)]), 1, '+'
-                            else: a, b, op = random.choice([(10,1), (100,1), (1000,1)]), 1, '-'
+                            if lb == '9+1': 
+                                a, b = random.choice([(9,1), (99,1), (999,1)])
+                                op = '+'
+                            else: 
+                                a, b = random.choice([(10,1), (100,1), (1000,1)])
+                                op = '-'
                             pattern_key = f"Boundary {op}"
                         else:
                             min_a, max_a = (10**(la-1) if la>1 else 0), (10**la - 1)
