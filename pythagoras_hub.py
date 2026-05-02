@@ -344,6 +344,7 @@ def mode_train():
         n = int(0.9*len(data))
         train_data, val_data = data[:n], data[n:]
 
+    batch_size = 64
     def get_batch(split):
         ds = train_data if split == 'train' else val_data
         ix = torch.randint(len(ds) - block_size, (batch_size,))
@@ -351,9 +352,12 @@ def mode_train():
         y = torch.stack([ds[i+1:i+block_size+1] for i in ix])
         return x.to(device), y.to(device)
 
-    batch_size = 64
     model = SimpleLLM(vocab_size).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=5e-4)
+    
+    # Фиксация seed для воспроизводимости
+    torch.manual_seed(42)
+    random.seed(42)
     
     progress = Progress(
         SpinnerColumn("pixel"),
@@ -366,29 +370,33 @@ def mode_train():
 
     with Live(Panel(Align.center("[bold]Подготовка нейросетевых связей...[/]"), title="Мониторинг"), console=console, refresh_per_second=10) as live:
         task = progress.add_task("[magenta]Синтез логики...", total=max_iters)
-        for iter in range(max_iters):
-            if iter % 200 == 0:
-                model.eval()
-                with torch.no_grad():
-                    xb, yb = get_batch('val')
-                    _, loss = model(xb, yb)
-                    cur_loss = loss.item()
-                model.train()
-                
-                # Обновление дашборда
-                table = Table.grid(expand=True)
-                table.add_row(f"Цикл: [bold]{iter}/{max_iters}[/]")
-                table.add_row(f"Ошибка: [bold green]{cur_loss:.4f}[/]")
-                table.add_row(progress)
-                live.update(Panel(table, title="[bold magenta]Training Dashboard[/]", border_style="magenta"))
+        try:
+            for iter in range(max_iters):
+                if iter % 200 == 0:
+                    model.eval()
+                    with torch.no_grad():
+                        xb, yb = get_batch('val')
+                        _, loss = model(xb, yb)
+                        cur_loss = loss.item()
+                    model.train()
+                    
+                    # Обновление дашборда
+                    table = Table.grid(expand=True)
+                    table.add_row(f"Цикл: [bold]{iter}/{max_iters}[/]")
+                    table.add_row(f"Ошибка: [bold green]{cur_loss:.4f}[/]")
+                    table.add_row(progress)
+                    live.update(Panel(table, title="[bold magenta]Training Dashboard[/]", border_style="magenta"))
 
-            optimizer.zero_grad(set_to_none=True)
-            xb, yb = get_batch('train')
-            _, loss = model(xb, yb)
-            loss.backward()
-            optimizer.step()
-            progress.update(task, advance=1)
+                optimizer.zero_grad(set_to_none=True)
+                xb, yb = get_batch('train')
+                _, loss = model(xb, yb)
+                loss.backward()
+                optimizer.step()
+                progress.update(task, advance=1)
+        except KeyboardInterrupt:
+            console.print("\n[bold yellow]⚠️ Обучение прервано пользователем. Сохраняю текущий прогресс...[/]")
 
+    os.makedirs('weights', exist_ok=True)
     torch.save(model.state_dict(), 'weights/math_model_weights.pth')
     console.print(Panel("[bold green]🎉 ОБУЧЕНИЕ ЗАВЕРШЕНО УСПЕШНО![/]", border_style="green"))
 
