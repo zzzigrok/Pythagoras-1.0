@@ -30,17 +30,24 @@ try:
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
 
-# --- 1. ГЛОБАЛЬНЫЕ НАСТРОЙКИ ---
+# --- 1. ГИПЕРПАРАМЕТРЫ И АППАРАТНАЯ ОПТИМИЗАЦИЯ ---
 console = Console()
-device = 'cpu'
-device_type = 'cpu'
-if hasattr(torch, "xpu") and torch.xpu.is_available():
-    device = 'xpu'
-    device_type = 'xpu'
-else:
-    torch.set_num_threads(6)
 
-# Гиперпараметры (v2.0)
+if torch.cuda.is_available():
+    device = 'cuda'
+    torch.backends.cudnn.benchmark = True
+elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+    device = 'mps'
+elif hasattr(torch, 'xpu') and torch.xpu.is_available():
+    device = 'xpu'
+else:
+    device = 'cpu'
+    torch.set_num_threads(os.cpu_count() or 4)
+
+device_type = 'cuda' if 'cuda' in device else 'cpu'
+pt_dtype = torch.bfloat16 if (torch.cuda.is_available() and torch.cuda.is_bf16_supported()) else torch.float16
+if device == 'cpu': pt_dtype = torch.float32
+
 n_embd = 256
 n_head = 8
 n_layer = 6
@@ -313,7 +320,7 @@ def mode_chat():
             for _ in range(15):
                 idx_cond = torch.tensor((generated_idx[-block_size:],), dtype=torch.long, device=device)
                 with torch.no_grad():
-                    with torch.autocast(device_type=device_type, dtype=torch.bfloat16):
+                    with torch.autocast(device_type=device_type, dtype=pt_dtype, enabled=(device!='cpu')):
                         logits, _ = model(idx_cond)
                     idx_next = torch.argmax(logits[0, -1, :]).item()
                     generated_idx.append(idx_next)
@@ -411,7 +418,8 @@ def mode_train():
 
                 optimizer.zero_grad(set_to_none=True)
                 xb, yb = get_batch('train')
-                _, loss = model(xb, yb)
+                with torch.autocast(device_type=device_type, dtype=pt_dtype, enabled=(device!='cpu')):
+                    _, loss = model(xb, yb)
                 loss.backward()
                 optimizer.step()
                 progress.update(task, advance=1)
