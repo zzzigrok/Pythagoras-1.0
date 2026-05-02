@@ -1,5 +1,0 @@
-n_embd = 256
-n_head = 8
-n_layer = 6
-block_size = 64
-dropout = 0.1
