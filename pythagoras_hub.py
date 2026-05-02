@@ -58,23 +58,40 @@ dropout = 0.1
 class MultiHeadAttention(nn.Module):
     """
     Механизм многоголового внимания (Multi-Head Attention).
-    Реализует эффективное вычисление зависимостей между символами в последовательности.
+    Оптимизирован с использованием FlashAttention и Residual Dropout.
     """
     def __init__(self, num_heads, head_size):
         super().__init__()
-        self.num_heads, self.head_size = num_heads, head_size
+        self.num_heads = num_heads
+        self.head_size = head_size
+        
+        # Единое линейное преобразование для Q, K, V (увеличивает скорость)
         self.c_attn = nn.Linear(n_embd, 3 * n_embd, bias=False)
         self.c_proj = nn.Linear(n_embd, n_embd)
+        
+        # Регуляризация
+        self.resid_dropout = nn.Dropout(dropout)
         self.dropout = dropout
 
     def forward(self, x):
-        B, T, C = x.shape
+        B, T, C = x.size()
+        
+        # Эффективное разделение и reshape
         q, k, v = self.c_attn(x).split(n_embd, dim=2)
         q = q.view(B, T, self.num_heads, self.head_size).transpose(1, 2)
         k = k.view(B, T, self.num_heads, self.head_size).transpose(1, 2)
         v = v.view(B, T, self.num_heads, self.head_size).transpose(1, 2)
-        y = F.scaled_dot_product_attention(q, k, v, is_causal=True, dropout_p=self.dropout if self.training else 0.0)
-        return self.c_proj(y.transpose(1, 2).contiguous().view(B, T, C))
+        
+        # FlashAttention (аппаратное ускорение на GPU, экономия O(N^2) памяти)
+        y = F.scaled_dot_product_attention(
+            q, k, v, 
+            is_causal=True, 
+            dropout_p=self.dropout if self.training else 0.0
+        )
+        
+        # Обратное объединение и финальная проекция
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
+        return self.resid_dropout(self.c_proj(y))
 
 class Block(nn.Module):
     """
