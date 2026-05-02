@@ -8,6 +8,8 @@
 > **Pythagoras 1.0** — это специализированная ветка экосистемы **Tolstoy AI Studio (TAS Beta)**, сфокусированная на высокоточных арифметических вычислениях и логическом выводе.
 <br>
 
+### 🔗 [Официальный лендинг проекта](https://zzzigrok.github.io/Pythagoras-1.0/)
+
 ![Interface Preview](docs/assets/interface_preview.png)
 
 ---
