@@ -130,10 +130,10 @@ const AnimatedTriangle = () => {
            <animate attributeName="stroke-dasharray" values="0,160; 160,0" dur="8s" repeatCount="indefinite" />
         </rect>
         <rect x="55" y="65" width="30" height="30" fill="none" className="stroke-teal-400 stroke-[0.5] opacity-50">
-           <animate attributeName="stroke-dasharray" values="0,120; 120,0" dur="6s" repeatCount="indefinite" delay="1s" />
+           <animate attributeName="stroke-dasharray" values="0,120; 120,0" dur="6s" repeatCount="indefinite" begin="1s" />
         </rect>
         <polygon points="55,25 85,65 45,95 15,55" fill="none" className="stroke-blue-400 stroke-[0.5] opacity-50">
-           <animate attributeName="stroke-dasharray" values="0,200; 200,0" dur="10s" repeatCount="indefinite" delay="2s" />
+           <animate attributeName="stroke-dasharray" values="0,200; 200,0" dur="10s" repeatCount="indefinite" begin="2s" />
         </polygon>
 
         {/* Узлы (имитация слоев нейросети) */}
@@ -233,7 +233,7 @@ export default function App() {
             Pythagoras <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">1.0</span>
           </div>
           <div className="hidden md:flex gap-8 text-sm font-medium text-slate-300">
-            {['О проекте', 'Особенности', 'Архитектура', 'Начать'].map((item, i) => (
+            {['О проекте', 'Особенности', 'Архитектура', 'Начать'].map((item) => (
               <a key={item} href={`#${item === 'О проекте' ? 'about' : item === 'Особенности' ? 'features' : item === 'Архитектура' ? 'architecture' : 'get-started'}`} 
                  className="relative hover:text-white transition-colors group py-1">
                 {item}
