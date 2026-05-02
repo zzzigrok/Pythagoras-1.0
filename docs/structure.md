@@ -1,0 +1,190 @@
+# 🗂️ Структура CLI-инструмента Pythagoras
+
+> Описание программной архитектуры `pythagoras_hub.py` — единого интерфейса для работы с моделью.
+
+---
+
+## 📋 Оглавление
+
+- [Файловая структура проекта](#-файловая-структура-проекта)
+- [Зависимости](#-зависимости)
+- [Функциональные блоки](#-функциональные-блоки)
+- [Блок-схема главного меню](#-блок-схема-главного-меню)
+- [Описание режимов](#-описание-режимов)
+
+---
+
+## 📁 Файловая структура проекта
+
+```
+Pythagoras 1.0/
+├── pythagoras_hub.py        # 🎯 Главный CLI (все режимы в одном файле)
+├── prep_math.py             # Генератор сбалансированного датасета
+├── train_math.py            # Обучение (минимальная версия)
+├── train_math_rich.py       # Обучение (с Rich UI дашбордом)
+├── chat_math.py             # Чат (минимальная версия)
+├── chat_math_rich.py        # Чат (с Rich UI)
+├── cfg.txt                  # Заметки по конфигурации
+├── input_math.txt           # 📦 Датасет (~6.7 МБ, 600к примеров)
+├── math_vocab.pkl           # Словарь символов (stoi/itos)
+├── math_model_weights.pth   # 💾 Обученные веса (~19 МБ)
+├── math_chat_history.txt    # Лог диалогов
+├── log.txt                  # Лог обучения
+├── reports/                 # 📊 Автогенерируемые отчёты
+│   ├── validation_results_*.csv
+│   └── validation_patterns_*.png
+├── first launch/            # Архив первых экспериментов
+└── docs/                    # 📖 Документация
+    ├── architecture.md
+    ├── trainer.md
+    ├── dataset.md
+    └── structure.md          ← вы здесь
+```
+
+---
+
+## 📦 Зависимости
+
+| Библиотека | Назначение | Обязательна? |
+| :--- | :--- | :---: |
+| `torch` | Нейросетевое ядро, тензоры, GPU | ✅ |
+| `rich` | Интерактивный CLI-интерфейс (панели, таблицы, прогресс-бары) | ✅ |
+| `psutil` | Мониторинг CPU/RAM в режиме отладки | ✅ |
+| `matplotlib` | Генерация PNG-диаграмм валидации | ⚠️ Опционально |
+| `pickle` | Сериализация словаря и данных | ✅ (stdlib) |
+| `csv` | Экспорт результатов валидации | ✅ (stdlib) |
+
+---
+
+## 🧩 Функциональные блоки
+
+`pythagoras_hub.py` состоит из 4 основных режимов, объединённых главным меню:
+
+```mermaid
+graph TD
+    MAIN["🏠 main()<br/>Главное меню"] --> CHAT["💬 mode_chat()<br/>Диалог с ИИ"]
+    MAIN --> TRAIN["🧬 mode_train()<br/>Обучение модели"]
+    MAIN --> HIST["📜 mode_history()<br/>Архив вычислений"]
+    MAIN --> DEBUG["🛠️ mode_debug()<br/>Диагностика"]
+    MAIN --> EXIT["🚪 Выход"]
+
+    DEBUG --> D1["1. Мониторинг ресурсов"]
+    DEBUG --> D2["2. Сканирование тензоров"]
+    DEBUG --> D3["3. Тест валидности<br/>(1000 примеров + инфографика)"]
+
+    style MAIN fill:#1a1a2e,stroke:#00e5ff,color:#fff
+    style CHAT fill:#16213e,stroke:#00e5ff,color:#fff
+    style TRAIN fill:#16213e,stroke:#b388ff,color:#fff
+    style HIST fill:#16213e,stroke:#ffd700,color:#fff
+    style DEBUG fill:#16213e,stroke:#ff2a6d,color:#fff
+    style EXIT fill:#16213e,stroke:#6b7d85,color:#fff
+    style D1 fill:#0f3460,stroke:#ff2a6d,color:#fff
+    style D2 fill:#0f3460,stroke:#ff2a6d,color:#fff
+    style D3 fill:#0f3460,stroke:#ff2a6d,color:#fff
+```
+
+---
+
+## 🗺️ Блок-схема главного меню
+
+Оформлена по ГОСТ 19.701-90 (ромбы — условия, параллелограммы — ввод/вывод, прямоугольники — действия):
+
+```mermaid
+flowchart TD
+    START(["▷ НАЧАЛО"]) --> CLEAR["Очистка экрана"]
+    CLEAR --> BANNER[/"Отрисовка баннера<br/>print_banner()"/]
+    BANNER --> MENU[/"Вывод 5 пунктов меню<br/>(Columns + Panel)"/]
+    MENU --> INPUT[/"Ввод: 'Выберите сектор'<br/>(1–5)"/]
+
+    INPUT --> C1{"Выбор = 1?"}
+    C1 -->|Да| CHAT["mode_chat()"]
+    C1 -->|Нет| C2{"Выбор = 2?"}
+    C2 -->|Да| TRAIN["mode_train()"]
+    C2 -->|Нет| C3{"Выбор = 3?"}
+    C3 -->|Да| HIST["mode_history()"]
+    C3 -->|Нет| C4{"Выбор = 4?"}
+    C4 -->|Да| DEBUG["mode_debug()"]
+    C4 -->|Нет| EXIT(["■ КОНЕЦ"])
+
+    CHAT --> CLEAR
+    TRAIN --> CLEAR
+    HIST --> CLEAR
+    DEBUG --> CLEAR
+
+    style START fill:#0f3460,stroke:#00e5ff,color:#fff
+    style EXIT fill:#0f3460,stroke:#00c897,color:#fff
+    style INPUT fill:#1a1a2e,stroke:#ffd700,color:#fff
+    style BANNER fill:#1a1a2e,stroke:#ffd700,color:#fff
+    style MENU fill:#1a1a2e,stroke:#ffd700,color:#fff
+    style C1 fill:#16213e,stroke:#b388ff,color:#fff
+    style C2 fill:#16213e,stroke:#b388ff,color:#fff
+    style C3 fill:#16213e,stroke:#b388ff,color:#fff
+    style C4 fill:#16213e,stroke:#b388ff,color:#fff
+```
+
+---
+
+## 📖 Описание режимов
+
+### 1. `mode_chat()` — Диалог с ИИ
+
+**Вход:** Пользователь вводит математическое выражение (например, `25+75=`).
+
+**Процесс генерации:**
+
+```mermaid
+flowchart LR
+    IN[/"Ввод: '25+75='"/] --> ENC["encode()<br/>→ [6,9,1,11,9,3]"]
+    ENC --> GEN["Авторегрессионная<br/>генерация (до 15 шагов)"]
+    GEN --> STOP{"Символ = \\n?"}
+    STOP -->|Да| DEC["decode()<br/>→ '25+75=100'"]
+    STOP -->|Нет| GEN
+    DEC --> OUT[/"Вывод ответа<br/>в Panel"/]
+
+    style IN fill:#1a1a2e,stroke:#00e5ff,color:#fff
+    style OUT fill:#1a1a2e,stroke:#00c897,color:#fff
+    style GEN fill:#16213e,stroke:#ff2a6d,color:#fff
+    style STOP fill:#16213e,stroke:#b388ff,color:#fff
+```
+
+- Если пользователь не ввёл `=`, оно добавляется автоматически.
+- Генерация останавливается при встрече символа `\n` или после 15 символов.
+- Каждый ответ логируется в `math_chat_history.txt`.
+
+### 2. `mode_train()` — Обучение модели
+
+- Проверяет наличие `input_math.txt`; предлагает сгенерировать через `prep_math.py`.
+- Запрашивает количество итераций (по умолчанию 5000).
+- Запускает цикл обучения с **Live-дашбордом** Rich (номер итерации, loss, прогресс-бар).
+- Сохраняет веса в `math_model_weights.pth`.
+
+> Подробнее — см. [trainer.md](trainer.md).
+
+### 3. `mode_history()` — Архив вычислений
+
+- Читает последние **20 записей** из `math_chat_history.txt`.
+- Парсит формат `[время] Запрос: ... | Ответ: ...`.
+- Выводит в виде таблицы Rich с колонками: Время, Запрос, Ответ.
+
+### 4. `mode_debug()` — Центр отладки и диагностики
+
+Подменю с 3 инструментами:
+
+| № | Инструмент | Описание |
+| :---: | :--- | :--- |
+| 1 | **Мониторинг ресурсов** | Загрузка CPU, использование RAM/VRAM, число потоков torch |
+| 2 | **Сканирование тензоров** | Загружает веса и выводит таблицу всех слоёв с формами и количеством параметров |
+| 3 | **Тест валидности** | Генерирует 1000 сбалансированных примеров, прогоняет через модель, выводит точность по паттернам. **Автоматически экспортирует** CSV-таблицу и PNG-диаграмму в `reports/` |
+
+### 5. `generate_validation_report()` — Генерация инфографики
+
+Вспомогательная функция, вызываемая из `mode_debug()` (пункт 3):
+
+- **CSV** (`reports/validation_results_<timestamp>.csv`): полная таблица 1000 примеров с колонками №, Пример, Ожидание, Ответ ИИ, Статус, Паттерн. Кодировка UTF-8 BOM, разделитель `;` — совместимо с Excel.
+- **PNG** (`reports/validation_patterns_<timestamp>.png`): два графика matplotlib — столбчатая диаграмма верных/ошибочных ответов и горизонтальный bar-chart точности по паттернам.
+
+---
+
+<p align="center">
+  <sub>Pythagoras 1.0 • Документация структуры • 2026</sub>
+</p>

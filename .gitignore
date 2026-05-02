@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data and Weights
+input_math.txt
+math_model_weights.pth
+math_vocab.pkl
+
+# Logs and History
+log.txt
+math_chat_history.txt
+reports/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Virtual Environment
+venv/
+.venv/
+env/
