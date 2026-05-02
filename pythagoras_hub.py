@@ -570,7 +570,7 @@ def mode_debug():
 
             results = []
             patterns = {}
-            error_types = {"Off-by-one": 0, "Sign error": 0, "Digit mismatch": 0, "Format error": 0}
+            error_types = {"Ошибка ±1": 0, "Ошибка знака": 0, "Ошибка в цифре": 0, "Формат": 0}
             tests_per_combo = num_tests // len(combos)
 
             progress = Progress(
@@ -594,13 +594,13 @@ def mode_debug():
                             else: 
                                 a, b = random.choice([(10,1), (100,1), (1000,1)])
                                 op = '-'
-                            pattern_key = f"Boundary {op}"
+                            pattern_key = f"Граничные ({op})"
                         else:
                             min_a, max_a = (10**(la-1) if la>1 else 0), (10**la - 1)
                             min_b, max_b = (10**(lb-1) if lb>1 else 0), (10**lb - 1)
                             a, b = random.randint(min_a, max_a), random.randint(min_b, max_b)
                             if op == '-' and a < b: a, b = b, a
-                            pattern_key = f"{la}d {op} {lb}d"
+                            pattern_key = f"{la}-зн. {op} {lb}-зн."
                         
                         target = a + b if op == '+' else a - b
                         prompt = f"{a}{op}{b}="
@@ -630,12 +630,12 @@ def mode_debug():
                                 patterns[pattern_key][0] += 1
                             else:
                                 # Классификация ошибки
-                                if abs(pred_int - target) == 1: err_type = "Off-by-one"
-                                elif pred_int * target < 0: err_type = "Sign error"
-                                else: err_type = "Digit mismatch"
+                                if abs(pred_int - target) == 1: err_type = "Ошибка ±1"
+                                elif pred_int * target < 0: err_type = "Ошибка знака"
+                                else: err_type = "Ошибка в цифре"
                                 error_types[err_type] += 1
                         except:
-                            err_type = "Format error"
+                            err_type = "Формат"
                             error_types[err_type] += 1
                         
                         results.append({
@@ -669,10 +669,10 @@ def mode_debug():
                 console.print(e_type_table)
 
             # Таблица паттернов
-            p_table = Table(title="Анализ паттернов сложности", box=ROUNDED)
-            p_table.add_column("Тип приema", style="cyan")
-            p_table.add_column("Точность", justify="right")
-            p_table.add_column("Статус", justify="center")
+            p_table = Table(title="Анализ паттернов сложности", box=ROUNDED, header_style="bold magenta")
+            p_table.add_column("Тип примера", style="cyan", width=22)
+            p_table.add_column("Точность (Верно/Всего)", justify="center", width=25)
+            p_table.add_column("Статус", justify="center", width=10)
 
             for p_key in sorted(patterns.keys()):
                 succ, tot = patterns[p_key]
