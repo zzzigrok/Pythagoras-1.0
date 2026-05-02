@@ -679,18 +679,12 @@ def mode_dataset():
         # Критическая масса особых случаев (50к)
         for _ in range(50000):
             a = random.randint(0, 999)
-            case = random.choice([(a, 0, '+'), (a, 0, '-'), (a, a, '-'), (0, a, '+')])
-            a_val, b_val, op = case
-            res = a_val + b_val if op == '+' else a_val - b_val
-            examples.append(f"{a_val}{op}{b_val}={res}\n")
-
         random.shuffle(examples)
         os.makedirs('data', exist_ok=True)
         with open('data/input_math.txt', 'w', encoding='utf-8') as f:
-            for ex in examples:
-                f.write(ex)
+            for ex in examples: f.write(ex)
 
-    console.print(Panel(f"[bold green]✅ Создано {len(examples)} сбалансированных примеров!\n[white]Файл: [cyan]data/input_math.txt[/]", border_style="green"))
+    console.print(Panel(f"[bold green]✅ Создано {len(examples):,} примеров!\n[white]Файл: [cyan]data/input_math.txt[/]", border_style="green"))
     Prompt.ask("\nНажмите Enter, чтобы вернуться в меню")
 
 # --- 5. ОБРАБОТЧИК ОШИБОК ---
