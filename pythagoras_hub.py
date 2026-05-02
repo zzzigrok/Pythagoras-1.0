@@ -9,6 +9,7 @@ import datetime
 import psutil
 import random
 import csv
+import traceback
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt, IntPrompt
@@ -661,7 +662,40 @@ def mode_dataset():
     console.print(Panel(f"[bold green]✅ Создано {len(examples)} сбалансированных примеров!\n[white]Файл: [cyan]data/input_math.txt[/]", border_style="green"))
     Prompt.ask("\nНажмите Enter, чтобы вернуться в меню")
 
-# --- 4. ГЛАВНОЕ МЕНЮ ---
+# --- 5. ОБРАБОТЧИК ОШИБОК ---
+
+def global_error_handler(e):
+    """
+    Глобальный перехватчик исключений.
+    Логирует ошибку в файл и выводит красивое уведомление пользователю.
+    """
+    os.makedirs('logs', exist_ok=True)
+    error_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    error_stack = traceback.format_exc()
+    
+    # Запись в лог
+    with open('logs/error_log.txt', 'a', encoding='utf-8') as f:
+        f.write(f"\n{'='*50}\n")
+        f.write(f"КРИТИЧЕСКАЯ ОШИБКА: {error_time}\n")
+        f.write(f"Тип: {type(e).__name__}\n")
+        f.write(f"Сообщение: {str(e)}\n")
+        f.write(f"Стек вызовов:\n{error_stack}\n")
+    
+    # Визуальное уведомление
+    console.print("\n")
+    console.print(Panel(
+        f"[bold white]Произошла критическая ошибка![/]\n\n"
+        f"[bold red]Тип:[/] {type(e).__name__}\n"
+        f"[bold red]Инфо:[/] {str(e)}\n\n"
+        f"Полный лог сохранен в: [cyan]logs/error_log.txt[/]\n"
+        f"Пожалуйста, сообщите разработчику об этой проблеме.",
+        title="[bold red] ⚠️ SYSTEM CRASH ⚠️ [/]",
+        border_style="red",
+        expand=False
+    ))
+    input("\nНажмите Enter для выхода...")
+
+# --- 6. ГЛАВНОЕ МЕНЮ ---
 
 def main():
     """Главная точка входа. Управляет основным циклом приложения и навигацией по меню."""
@@ -691,5 +725,10 @@ def main():
             console.print("[italic red]Система отключена.[/]")
             break
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        global_error_handler(e)
+
+
