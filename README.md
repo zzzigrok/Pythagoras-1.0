@@ -38,7 +38,7 @@ python src/prep_math.py
 Pythagoras поставляется с единым центром управления. Запустите его для доступа ко всем функциям:
 
 ```bash
-python src/pythagoras_hub.py
+python pythagoras_hub.py
 ```
 
 В главном меню вы сможете:
@@ -56,10 +56,11 @@ Pythagoras 1.0/
 ├── data/           # Математические датасеты
 ├── docs/           # Техническая документация
 ├── logs/           # История чатов и логи
-├── src/            # Исходный код (Hub, Prep)
+├── src/            # Исходный код (Prep)
 ├── weights/        # Веса модели и вокабуляр
 ├── LICENSE         # Лицензия MIT
 ├── README.md       # Описание проекта
+├── pythagoras_hub.py # Основной файл запуска (HUB)
 └── requirements.txt # Зависимости
 ```
 
