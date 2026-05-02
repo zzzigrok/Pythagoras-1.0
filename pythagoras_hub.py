@@ -414,7 +414,7 @@ def mode_train():
     progress = Progress(
         SpinnerColumn("pixel"),
         TextColumn("[progress.description]{task.description}"),
-        BarColumn(bar_width=40, gradient=("magenta", "blue")),
+        BarColumn(bar_width=40, style="magenta"),
         TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
         TimeRemainingColumn(),
         console=console
@@ -576,7 +576,7 @@ def mode_debug():
             progress = Progress(
                 SpinnerColumn(),
                 TextColumn("[bold blue]{task.description}"),
-                BarColumn(bar_width=40, gradient=("cyan", "blue")),
+                BarColumn(bar_width=40, style="cyan"),
                 TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
                 TimeRemainingColumn(),
                 console=console
