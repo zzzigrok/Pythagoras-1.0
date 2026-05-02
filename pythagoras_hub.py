@@ -146,10 +146,10 @@ def generate_validation_report(results: list, patterns: dict, accuracy: float, c
             # utf-8-sig гарантирует корректное открытие в Excel (BOM)
             writer = csv.writer(csvfile, delimiter=';')
             # Заголовок
-            writer.writerow(["№", "Пример", "Ожидаемый ответ", "Ответ нейросети", "Статус", "Паттерн сложности"])
+            writer.writerow(["№", "Пример", "Ожидаемый ответ", "Ответ нейросети", "Статус", "Тип ошибки", "Паттерн сложности"])
             for i, r in enumerate(results, 1):
                 status_text = "✓ Верно" if r['ok'] else "✗ Ошибка"
-                writer.writerow([i, r['prompt'], r['target'], r['pred'], status_text, r['pattern']])
+                writer.writerow([i, r['prompt'], r['target'], r['pred'], status_text, r['err_type'], r['pattern']])
             # Пустая строка-разделительЫ
             writer.writerow([])
             # Итоговая строка
@@ -545,39 +545,61 @@ def mode_debug():
             if not os.path.exists('weights/math_model_weights.pth'):
                 console.print("[red]Ошибка: Обучите модель![/]")
                 continue
+            
+            num_tests = IntPrompt.ask("[bold white]Количество тестов для валидации[/]", default=1000)
                 
-            with Status("[bold yellow]Запуск расширенной валидации (1000 примеров)...", console=console):
-                with open('weights/math_vocab.pkl', 'rb') as f: v_data = pickle.load(f)
-                stoi, itos = v_data['stoi'], v_data['itos']
-                m = SimpleLLM(v_data['vocab_size']).to(device)
-                m.load_state_dict(torch.load('weights/math_model_weights.pth', map_location=device, weights_only=True))
-                m.eval()
-                
-                encode = lambda s: [stoi.get(c, 0) for c in s]
-                decode = lambda l: ''.join([itos.get(i, '?') for i in l])
-                
-                # Генерируем сбалансированные паттерны (15 комбинаций)
-                combos = []
-                for la in [1, 2, 3]:
-                    for lb in [1, 2, 3]:
-                        combos.append((la, '+', lb))
-                        if la >= lb: combos.append((la, '-', lb))
-                
-                results = []
-                patterns = {}
-                total_tests = 1000
-                tests_per_combo = total_tests // len(combos)
+            with open('weights/math_vocab.pkl', 'rb') as f: v_data = pickle.load(f)
+            stoi, itos = v_data['stoi'], v_data['itos']
+            m = SimpleLLM(v_data['vocab_size']).to(device)
+            m.load_state_dict(torch.load('weights/math_model_weights.pth', map_location=device, weights_only=True))
+            m.eval()
+            
+            encode = lambda s: [stoi.get(c, 0) for c in s]
+            decode = lambda l: ''.join([itos.get(i, '?') for i in l])
+            
+            # Генерируем сбалансированные паттерны
+            combos = []
+            for la in [1, 2, 3]:
+                for lb in [1, 2, 3]:
+                    combos.append((la, '+', lb))
+                    if la >= lb: combos.append((la, '-', lb))
+            
+            # Добавляем "стрессовые" паттерны (границы разрядов)
+            combos.append(('edge', 'carry', '9+1'))
+            combos.append(('edge', 'borrow', '10-1'))
 
+            results = []
+            patterns = {}
+            error_types = {"Off-by-one": 0, "Sign error": 0, "Digit mismatch": 0, "Format error": 0}
+            tests_per_combo = num_tests // len(combos)
+
+            progress = Progress(
+                SpinnerColumn(),
+                TextColumn("[bold blue]{task.description}"),
+                BarColumn(bar_width=40, gradient=("cyan", "blue")),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TimeRemainingColumn(),
+                console=console
+            )
+
+            with progress:
+                main_task = progress.add_task("Валидация...", total=num_tests)
+                
                 for la, op, lb in combos:
                     for _ in range(tests_per_combo):
-                        min_a, max_a = (10**(la-1) if la>1 else 0), (10**la - 1)
-                        min_b, max_b = (10**(lb-1) if lb>1 else 0), (10**lb - 1)
-                        a, b = random.randint(min_a, max_a), random.randint(min_b, max_b)
-                        if op == '-' and a < b: a, b = b, a
+                        if la == 'edge':
+                            if lb == '9+1': a, b, op = random.choice([(9,1), (99,1), (999,1)]), 1, '+'
+                            else: a, b, op = random.choice([(10,1), (100,1), (1000,1)]), 1, '-'
+                            pattern_key = f"Boundary {op}"
+                        else:
+                            min_a, max_a = (10**(la-1) if la>1 else 0), (10**la - 1)
+                            min_b, max_b = (10**(lb-1) if lb>1 else 0), (10**lb - 1)
+                            a, b = random.randint(min_a, max_a), random.randint(min_b, max_b)
+                            if op == '-' and a < b: a, b = b, a
+                            pattern_key = f"{la}d {op} {lb}d"
                         
                         target = a + b if op == '+' else a - b
                         prompt = f"{a}{op}{b}="
-                        pattern_key = f"{la}d {op} {lb}d"
                         
                         if pattern_key not in patterns: patterns[pattern_key] = [0, 0]
                         patterns[pattern_key][1] += 1
@@ -587,65 +609,93 @@ def mode_debug():
                         for _ in range(10):
                             idx_c = torch.tensor((gen_idx[-block_size:],), dtype=torch.long, device=device)
                             with torch.no_grad():
-                                logits, _ = m(idx_c)
+                                with torch.autocast(device_type=device_type, dtype=pt_dtype, enabled=(device!='cpu')):
+                                    logits, _ = m(idx_c)
                                 nxt = torch.argmax(logits[0, -1, :]).item()
                                 gen_idx.append(nxt)
                                 if itos.get(nxt) == '\n': break
                         
                         pred_str = decode(gen_idx).split('=')[1].strip()
+                        is_ok = False
+                        err_type = "None"
+                        
                         try:
-                            is_ok = int(pred_str) == target
-                            if is_ok: 
+                            pred_int = int(pred_str)
+                            is_ok = pred_int == target
+                            if is_ok:
                                 patterns[pattern_key][0] += 1
-                            results.append({'prompt': prompt, 'target': target, 'pred': pred_str, 'ok': is_ok, 'pattern': pattern_key})
+                            else:
+                                # Классификация ошибки
+                                if abs(pred_int - target) == 1: err_type = "Off-by-one"
+                                elif pred_int * target < 0: err_type = "Sign error"
+                                else: err_type = "Digit mismatch"
+                                error_types[err_type] += 1
                         except:
-                            results.append({'prompt': prompt, 'target': target, 'pred': pred_str, 'ok': False, 'pattern': pattern_key})
+                            err_type = "Format error"
+                            error_types[err_type] += 1
+                        
+                        results.append({
+                            'prompt': prompt, 'target': target, 'pred': pred_str, 
+                            'ok': is_ok, 'pattern': pattern_key, 'err_type': err_type
+                        })
+                        progress.update(main_task, advance=1)
 
             # --- ОТЧЕТ ПО ВАЛИДАЦИИ ---
             correct_count = sum(1 for r in results if r['ok'])
             accuracy = (correct_count / len(results)) * 100
             
-            score_color = "green" if accuracy > 90 else "yellow" if accuracy > 70 else "red"
-            console.print(Panel(Align.center(f"[bold {score_color}]ОБЩАЯ ТОЧНОСТЬ: {accuracy:.1f}% ({correct_count}/{len(results)})[/]"), title="Итоговый отчет"))
+            score_color = "green" if accuracy > 95 else "yellow" if accuracy > 80 else "red"
             
+            # Сводная панель
+            summary_table = Table.grid(expand=True)
+            summary_table.add_row(f"[bold white]Всего тестов:[/] [cyan]{len(results)}[/]")
+            summary_table.add_row(f"[bold white]Успешно:[/] [green]{correct_count}[/]")
+            summary_table.add_row(f"[bold white]Ошибок:[/] [red]{len(results) - correct_count}[/]")
+            summary_table.add_row(f"[bold {score_color}]Точность:[/] [bold {score_color}]{accuracy:.2f}%[/]")
+            
+            console.print(Panel(summary_table, title="[bold cyan]📊 ИТОГИ ВАЛИДАЦИИ[/]", border_style=score_color))
+            
+            # Таблица типов ошибок
+            if correct_count < len(results):
+                e_type_table = Table(title="Классификация ошибок", box=ROUNDED, header_style="bold red")
+                e_type_table.add_column("Тип аномалии")
+                e_type_table.add_column("Частота", justify="right")
+                for et, count in error_types.items():
+                    if count > 0: e_type_table.add_row(et, str(count))
+                console.print(e_type_table)
+
             # Таблица паттернов
             p_table = Table(title="Анализ паттернов сложности", box=ROUNDED)
-            p_table.add_column("Тип примера", style="cyan")
+            p_table.add_column("Тип приema", style="cyan")
             p_table.add_column("Точность", justify="right")
             p_table.add_column("Статус", justify="center")
 
             for p_key in sorted(patterns.keys()):
                 succ, tot = patterns[p_key]
                 p_acc = (succ / tot) * 100
-                p_color = "green" if p_acc > 90 else "yellow" if p_acc > 50 else "red"
-                status_icon = "✅" if p_acc == 100 else "⚠️" if p_acc > 50 else "❌"
-                p_table.add_row(p_key, f"[{p_color}]{p_acc:.1f}% ({succ}/{tot})[/]", status_icon)
+                p_color = "green" if p_acc > 95 else "yellow" if p_acc > 75 else "red"
+                status_icon = "💎" if p_acc == 100 else "✅" if p_acc > 90 else "⚠️" if p_acc > 50 else "❌"
+                p_table.add_row(p_key, f"[{p_color}]{p_acc:.2f}% ({succ}/{tot})[/]", status_icon)
             
             console.print(p_table)
 
             # Детальный разбор ошибок
             errors = [r for r in results if not r['ok']]
             if errors:
-                e_table = Table(title="Топ ошибок для отладки", box=ROUNDED)
+                e_table = Table(title="Примеры критических ошибок", box=ROUNDED)
                 e_table.add_column("Пример", style="white")
                 e_table.add_column("Ожидалось", style="green")
                 e_table.add_column("ИИ", style="red")
-                e_table.add_column("Паттерн", style="dim")
-                for e in errors[:10]:
-                    e_table.add_row(e['prompt'], str(e['target']), e['pred'], e['pattern'])
+                e_table.add_column("Тип", style="bold yellow")
+                for e in errors[:8]:
+                    e_table.add_row(e['prompt'], str(e['target']), e['pred'], e['err_type'])
                 console.print(e_table)
-                
-                # Вывод самого слабого звена
-                weakest = min(patterns.items(), key=lambda x: x[1][0]/x[1][1])
-                console.print(Panel(f"[bold red]Критическая уязвимость:[/] Модель хуже всего справляется с паттерном [bold cyan]{weakest[0]}[/] ({weakest[1][0]/weakest[1][1]*100:.1f}%)", border_style="red"))
-            else:
-                console.print("[bold green]✨ Идеальный результат! Все паттерны освоены.[/]")
-
-            # --- Генерация инфографики ---
-            with console.status("[bold cyan]📊 Генерирую инфографику и экспортирую отчёты...[/]", spinner="dots"):
+            
+            # Экспорт
+            with console.status("[bold cyan]📊 Синхронизация отчётов...[/]"):
                 generate_validation_report(results, patterns, accuracy, correct_count)
 
-            Prompt.ask("\nНажмите Enter...")
+            Prompt.ask("\n[bold white]Нажмите Enter для возврата[/]")
             
 def mode_dataset():
     """
