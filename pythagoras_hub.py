@@ -78,6 +78,7 @@ class Block(nn.Module):
 class SimpleLLM(nn.Module):
     def __init__(self, vocab_size):
         super().__init__()
+        self.vocab_size = vocab_size
         self.token_emb = nn.Embedding(vocab_size, n_embd)
         self.pos_emb = nn.Embedding(block_size, n_embd)
         self.blocks = nn.Sequential(*[Block() for _ in range(n_layer)])
@@ -89,7 +90,7 @@ class SimpleLLM(nn.Module):
         x = self.token_emb(idx) + self.pos_emb(torch.arange(T, device=device))
         x = self.blocks(x)
         logits = self.lm_head(self.ln_f(x))
-        loss = F.cross_entropy(logits.view(-1, vocab_size), targets.view(-1)) if targets is not None else None
+        loss = F.cross_entropy(logits.view(-1, self.vocab_size), targets.view(-1)) if targets is not None else None
         return logits, loss
 
 # --- 3. ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ГЕНЕРАЦИИ ОТЧЁТОВ ---
