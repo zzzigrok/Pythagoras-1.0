@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="Pythagoras Logo" width="100%">
+</p>
+
 # 🏛️ Архитектура модели Pythagoras v2.2
 
 > **SimpleLLM** — авторегрессионная языковая модель, специализированная на арифметических вычислениях.

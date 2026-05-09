@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="Pythagoras Logo" width="100%">
+</p>
+
 # 🗂️ Структура CLI-инструмента Pythagoras
 
 > Описание программной архитектуры `pythagoras_hub.py` — единого интерфейса для работы с моделью.

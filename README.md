@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.svg" alt="Pythagoras Logo" width="100%">
+</p>
+
 # 📐 Pythagoras 1.0 — Quantum Neural Engine
 
 [![AI Studio](https://img.shields.io/badge/TAS-Beta-00e5ff.svg)](https://github.com/your-username/pythagoras-1.0)
