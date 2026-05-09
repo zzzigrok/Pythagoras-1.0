@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="Pythagoras Logo" width="100%">
+</p>
+
 # 📐 Генератор датасета — `prep_math.py`
 
 > Скрипт формирует **сбалансированный обучающий датасет** арифметических примеров.

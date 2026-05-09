@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="Pythagoras Logo" width="100%">
+</p>
+
 # ⚙️ Механизм обучения Pythagoras v2.2
 
 > Документ описывает весь цикл обучения модели: от подготовки тензоров до сохранения весов.

@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300" width="100%" height="100%">
+    <defs>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Rock+Salt&amp;display=swap');
+
+            /* Вращения орбит (центр смещен на X:200, Y:150) */
+            .orbit-1 { transform-origin: 200px 150px; animation: spin 30s linear infinite; }
+            .orbit-3 { transform-origin: 200px 150px; animation: spin 45s linear infinite; }
+
+            .pulse-node { animation: pulse 3s ease-in-out infinite alternate; }
+            .pulse-node-delay { animation: pulse 3s ease-in-out 1.5s infinite alternate; }
+
+            .data-flow {
+                stroke-dasharray: 8 16;
+                animation: flow 1.5s linear infinite;
+            }
+            .data-flow-reverse {
+                stroke-dasharray: 6 20;
+                animation: flow-reverse 2s linear infinite;
+            }
+            .horizontal-stream {
+                stroke-dasharray: 100 200;
+                animation: streamFlow 4s linear infinite;
+            }
+
+            .reveal-text {
+                stroke-dasharray: 1000;
+                stroke-dashoffset: 1000;
+                animation: drawText 3.5s ease-out forwards;
+            }
+
+            @keyframes spin { 100% { transform: rotate(360deg); } }
+
+            @keyframes pulse {
+                0% { r: 5; opacity: 0.8; filter: drop-shadow(0 0 2px #00e5ff); }
+                100% { r: 7; opacity: 1; filter: drop-shadow(0 0 8px #00e5ff); }
+            }
+
+            @keyframes flow { to { stroke-dashoffset: -24; } }
+            @keyframes flow-reverse { to { stroke-dashoffset: 26; } }
+            @keyframes streamFlow { to { stroke-dashoffset: -300; } }
+
+            @keyframes drawText {
+                50% { fill: transparent; }
+                100% { stroke-dashoffset: 0; fill: url(#grad-text); }
+            }
+
+            .glow-text { filter: url(#glow); }
+        </style>
+
+        <!-- Свечение -->
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+
+        <filter id="glow-intense" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="8" result="blur1" />
+            <feGaussianBlur stdDeviation="15" result="blur2" />
+            <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+
+        <!-- Градиенты -->
+        <linearGradient id="grad-cyan-purple" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#00e5ff" />
+            <stop offset="100%" stop-color="#b388ff" />
+        </linearGradient>
+
+        <linearGradient id="grad-text" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="50%" stop-color="#e0e0e0" />
+            <stop offset="100%" stop-color="#8ab4f8" />
+        </linearGradient>
+
+        <!-- Паттерн фоновой сетки -->
+        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#334455" stroke-width="0.5" stroke-opacity="0.4"/>
+            <circle cx="0" cy="0" r="1" fill="#00e5ff" opacity="0.4" />
+        </pattern>
+    </defs>
+
+    <!-- Прозрачный фон с сохранением нейронной сетки -->
+    <rect width="100%" height="100%" fill="url(#grid)" />
+
+    <!-- ======================= ЛЕВАЯ ЧАСТЬ: ДВИЖОК ======================= -->
+
+    <!-- Горизонтальная квантовая магистраль -->
+    <g opacity="0.6" filter="url(#glow)">
+        <!-- Центральная линия от скрытого узла -->
+        <line x1="220" y1="150" x2="950" y2="150" stroke="#00e5ff" stroke-width="1.5" stroke-dasharray="4 8" opacity="0.3" />
+        <line x1="220" y1="150" x2="950" y2="150" stroke="#00e5ff" stroke-width="2" class="horizontal-stream" />
+    </g>
+
+    <!-- Квантовые орбиты -->
+    <g fill="none" stroke-width="1.5" opacity="0.3">
+        <ellipse cx="200" cy="150" rx="160" ry="60" stroke="#00e5ff" class="orbit-1" stroke-dasharray="80 15 10 15" />
+        <ellipse cx="200" cy="150" rx="170" ry="90" stroke="#b388ff" class="orbit-3" stroke-dasharray="40 10 5 10" transform="rotate(45 200 150)" />
+    </g>
+
+    <!-- ОСНОВНАЯ ФИГУРА: Прямоугольный треугольник -->
+    <g filter="url(#glow)">
+        <!-- Катет a (основание) -->
+        <line x1="100" y1="240" x2="300" y2="240" stroke="#00e5ff" stroke-width="4" />
+        <!-- Катет b (высота) -->
+        <line x1="300" y1="240" x2="300" y2="60" stroke="#ff2a6d" stroke-width="4" />
+        <!-- Гипотенуза c -->
+        <line x1="100" y1="240" x2="300" y2="60" stroke="url(#grad-cyan-purple)" stroke-width="5" />
+
+        <!-- Внутренние "нейронные" связи -->
+        <line x1="100" y1="240" x2="220" y2="150" stroke="#4a5d73" stroke-width="2" />
+        <line x1="300" y1="240" x2="220" y2="150" stroke="#4a5d73" stroke-width="2" />
+        <line x1="300" y1="60" x2="220" y2="150" stroke="#4a5d73" stroke-width="2" />
+    </g>
+
+    <!-- Потоки данных по граням -->
+    <g fill="none" stroke-width="2.5" filter="url(#glow)">
+        <line x1="100" y1="240" x2="300" y2="240" stroke="#ffffff" class="data-flow" />
+        <line x1="300" y1="240" x2="300" y2="60" stroke="#ffffff" class="data-flow-reverse" />
+        <line x1="100" y1="240" x2="300" y2="60" stroke="#ffffff" class="data-flow" stroke-width="3.5" />
+    </g>
+
+    <!-- Узлы (Вершины графа) -->
+    <g filter="url(#glow-intense)">
+        <!-- Центральный скрытый узел -->
+        <circle cx="220" cy="150" r="3" fill="#ffd700" class="pulse-node" />
+
+        <!-- Вершина A -->
+        <circle cx="100" cy="240" r="6" fill="#00e5ff" class="pulse-node" />
+        <circle cx="100" cy="240" r="12" fill="none" stroke="#00e5ff" stroke-width="2" opacity="0.5" />
+
+        <!-- Вершина B (Прямой угол) -->
+        <circle cx="300" cy="240" r="6" fill="#ff2a6d" class="pulse-node-delay" />
+        <path d="M 280 240 L 280 220 L 300 220" fill="none" stroke="#ff2a6d" stroke-width="2" opacity="0.6" />
+
+        <!-- Вершина C -->
+        <circle cx="300" cy="60" r="6" fill="#b388ff" class="pulse-node" />
+        <circle cx="300" cy="60" r="14" fill="none" stroke="#b388ff" stroke-width="1" stroke-dasharray="4 2" class="orbit-1" />
+    </g>
+
+    <!-- Подсказки входов/выходов на движке -->
+    <g font-family="monospace" font-size="10" fill="#b388ff" opacity="0.8">
+        <text x="45" y="255">input()</text>
+        <text x="315" y="55">logits</text>
+    </g>
+
+
+    <!-- ======================= ПРАВАЯ ЧАСТЬ: ТИПОГРАФИКА ======================= -->
+
+    <g text-anchor="start" transform="translate(420, 0)">
+        <!-- Декоративные рамки вокруг текста -->
+        <path d="M -20 100 L -20 80 L 10 80" fill="none" stroke="#00e5ff" stroke-width="2" opacity="0.6" />
+        <path d="M 530 200 L 530 220 L 500 220" fill="none" stroke="#ff2a6d" stroke-width="2" opacity="0.6" />
+
+        <!-- Главный заголовок (шрифт корявой рукописи, слегка наклоненный) -->
+        <text x="10" y="140" font-family="'Rock Salt', cursive" font-size="44" font-weight="normal" letter-spacing="4" fill="transparent" stroke="#ffffff" stroke-width="1.2" class="reveal-text glow-text" transform="rotate(-3, 10, 140)">
+            PYTHAGORAS
+        </text>
+
+        <!-- Подзаголовок (остается строгим и технологичным для контраста) -->
+        <text x="15" y="185" font-family="'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="600" letter-spacing="8" fill="#00e5ff" opacity="0.9">
+            1.0 TAS NEURAL ENGINE
+        </text>
+    </g>
+
+</svg>
